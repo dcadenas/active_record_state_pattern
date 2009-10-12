@@ -1,0 +1,106 @@
+= state_pattern
+
+A Ruby state pattern implementation.
+
+== Example
+
+Let's use one nice example from the AASM documentation and translate it to state_pattern (but keep in mind state_pattern is a generic gem, AASM is a Rails plugin):
+
+  require 'rubygems'
+  require 'state_pattern'
+
+  class Dating < StatePattern::State
+    def get_intimate
+      transition_to(Intimate) if stateable.drunk?
+    end
+
+    def get_married
+      transition_to(Married) if stateable.willing_to_give_up_manhood?
+    end
+
+    def enter
+      stateable.make_happy
+    end
+
+    def exit
+      stateable.make_depressed
+    end
+  end
+
+  class Intimate < StatePattern::State
+    def get_married
+      transition_to(Married) if stateable.willing_to_give_up_manhood?
+    end
+
+    def enter
+      stateable.make_very_happy
+    end
+
+    def exit
+      stateable.never_speak_again
+    end
+  end
+
+  class Married < StatePattern::State
+    def enter
+      stateable.give_up_intimacy
+    end
+
+    def exit
+      stateable.buy_exotic_car_and_wear_a_combover
+    end
+  end
+
+  class Relationship
+    include StatePattern
+    set_initial_state Dating
+    valid_transitions [Dating, :get_intimate] => Intimate, [Dating, :get_married] => Married, [Intimate, :get_married] => Married
+
+    def drunk?; @drunk; end
+    def willing_to_give_up_manhood?; @give_up_manhood; end
+    def make_happy; end
+    def make_depressed; end
+    def make_very_happy; end
+    def never_speak_again; end
+    def give_up_intimacy; end
+    def buy_exotic_car_and_wear_a_combover; end
+  end
+
+== Validations
+
+One of the few drawbacks the state pattern has is that it can get difficult to see the global picture of your state machine when dealing with complex cases.
+To deal with this problem you have the option of using the valid_transitions statement to "draw" your state diagram in code. Whenever a state transition is performed, the valid_transitions hash is checked and if the transition is not valid a StatePattern::InvalidTransitionException is thrown.
+
+Examples:
+
+The most basic notation
+  valid_transitions On => Off, Off => On
+
+With more than one target state
+  valid_transitions Up => [Middle, Down], Down => Middle, Middle => Up 
+
+Using event names to gain more detail
+  valid_transitions [Up, :switch] => [Middle, Down], [Down, :switch] => Middle, [Middle, :switch] => Up 
+
+== Enter and exit hooks
+
+Inside your state classes, any code that you put inside the enter method will be executed when the state is instantiated.
+You can also use the exit hook which is triggered when a successfull transition to another state takes place.
+
+== Querying
+
+The state pattern is a very dynamic way of representing a state machine, very few things are hard-coded and everything can change on runtime.
+This means that the only way (apart from parsing ruby code) to get a list of the state classes and events that are used, is inspecting the valid_transitions array.
+So assuming that you completely draw your state machine with valid_transitions (which is always recommended) you can use the class methods state_classes and state_events to get a list of states and events respectively.
+
+== Installation
+
+  sudo gem install state_pattern
+
+== Collaborate
+
+http://github.com/dcadenas/state_pattern
+
+== Copyright
+
+Copyright (c) 2009 Daniel Cadenas. See LICENSE for details.

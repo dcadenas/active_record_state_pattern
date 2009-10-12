@@ -1,0 +1,101 @@
+= active_record_state_pattern
+
+A Rails plugin that implements the state design pattern in ActiveRecord models.
+
+== Example
+
+This plugin uses a vendored version of the state_pattern gem so see its documentation for more information and a framework agnostic example.
+Note this is not the best example to show as ideally this plugin should be used with lot of state dependent behaviour and this is not the case.
+
+  class StateBase < StatePattern::State
+    def submit!
+    end
+
+    def publish!
+    end
+
+    def reject!
+      transition_to(Rejected)
+      stateable.save!
+    end
+     
+    def verify!
+    end
+  end
+
+  class Published < StateBase
+  end
+
+  class Pending < StateBase
+    def publish!
+      transition_to(Published) if stateable.valid?
+      stateable.save!
+    end
+  end
+
+  class Unverified < StateBase
+    def submit!
+      if stateable.submitter.manager?
+        if stateable.profile_complete?
+          transition_to(Published)
+        else
+          transition_to(Pending)
+        end
+
+        stateable.save!
+      end
+    end
+
+    def verify!
+      transition_to(Pending)
+      stateable.save!
+    end
+  end
+
+  class Rejected < StateBase
+    def publish!
+      transition_to(Published) if stateable.valid?
+      stateable.save!
+    end
+
+    def enter
+      Notifier.notify_blog_owner(stateable)
+    end
+  end
+
+  class Blog < ActiveRecord::Base
+    include ActiveRecordStatePattern
+    set_initial_state Unverified
+    valid_transitions [Unverified, :submit!] => [Published, Pending, Unverified], [Unverified, :verify!] => Pending, [Unverified, :reject!] => Rejected,
+                      [Pending, :publish!] => Published, [Pending, :reject!] => Rejected,
+                      [Rejected, :publish!] => Published, [Rejected, :reject!] => Rejected,
+                      [Published, :reject!] => Rejected
+
+     .
+     .
+     .
+
+  end
+
+== The state attribute
+
+By default active_record_state_pattern expects a column named 'state' in the model. If you prefer to use another attribute do:
+
+  set_state_attribute :state_column
+
+== How do I decide? active_record_state_pattern or AASM?
+
+* Lot of state dependent behavior? Lot of conditional logic? => active_record_state_pattern
+* Not much state dependent behavior? => AASM
+
+== Installation
+
+  ruby script/plugin install git://github.com/dcadenas/active_record_state_pattern.git
+
+== Collaborate
+
+http://github.com/dcadenas/active_record_state_pattern
+
+== Copyright
+
+Copyright (c) 2009 Daniel Cadenas. See LICENSE for details.
