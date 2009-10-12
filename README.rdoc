@@ -1,10 +1,10 @@
 = active_record_state_pattern
 
-A Rails plugin that implements the state design pattern in ActiveRecord models.
+A Rails plugin that implements the {state design pattern}[http://home.earthlink.net/~huston2/dp/state.html] in ActiveRecord models.
 
 == Example
 
-This plugin uses a vendored version of the state_pattern gem so see its documentation for more information and a framework agnostic example.
+This plugin uses a vendored version of the {state_pattern}[http://github.com/dcadenas/state_pattern] gem so see its documentation for more information and a framework agnostic example.
 Note this is not the best example to show as ideally this plugin should be used with lot of state dependent behaviour and this is not the case.
 
   class StateBase < StatePattern::State
@@ -83,7 +83,7 @@ By default active_record_state_pattern expects a column named 'state' in the mod
 
   set_state_attribute :state_column
 
-== How do I decide? active_record_state_pattern or AASM?
+== How do I decide? active_record_state_pattern or {AASM}[http://github.com/rubyist/aasm]?
 
 * Lot of state dependent behavior? Lot of conditional logic? => active_record_state_pattern
 * Not much state dependent behavior? => AASM
