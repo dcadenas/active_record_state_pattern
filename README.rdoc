@@ -2,6 +2,8 @@
 
 A Rails plugin that implements the {state design pattern}[http://home.earthlink.net/~huston2/dp/state.html] in ActiveRecord models.
 
+This library intentionally follows the classic state pattern implementation (no state mixins, classical delegation to simple state classes, etc.) believing that by doing so we increase flexibility (internal DSL constraints vs plain object oriented Ruby power), simplicity and clarity.
+
 == Example
 
 This plugin uses a vendored version of the {state_pattern}[http://github.com/dcadenas/state_pattern] gem so see its documentation for more information and a framework agnostic example.
