@@ -9,63 +9,67 @@ This library intentionally follows the classic state pattern implementation (no 
 This plugin uses a vendored version of the {state_pattern}[http://github.com/dcadenas/state_pattern] gem so see its documentation for more information and a framework agnostic example.
 Note this is not the best example to show as ideally this plugin should be used with lot of state dependent behaviour and this is not the case.
 
-  class StateBase < StatePattern::State
-    def submit!
+
+  module BlogStates
+    class StateBase < StatePattern::State
+      def submit!
+      end
+
+      def publish!
+      end
+
+      def reject!
+        transition_to(Rejected)
+        stateable.save!
+      end
+       
+      def verify!
+      end
     end
 
-    def publish!
+    class Published < StateBase
     end
 
-    def reject!
-      transition_to(Rejected)
-      stateable.save!
-    end
-     
-    def verify!
-    end
-  end
-
-  class Published < StateBase
-  end
-
-  class Pending < StateBase
-    def publish!
-      transition_to(Published) if stateable.valid?
-      stateable.save!
-    end
-  end
-
-  class Unverified < StateBase
-    def submit!
-      if stateable.submitter.manager?
-        if stateable.profile_complete?
-          transition_to(Published)
-        else
-          transition_to(Pending)
-        end
-
+    class Pending < StateBase
+      def publish!
+        transition_to(Published) if stateable.valid?
         stateable.save!
       end
     end
 
-    def verify!
-      transition_to(Pending)
-      stateable.save!
-    end
-  end
+    class Unverified < StateBase
+      def submit!
+        if stateable.submitter.manager?
+          if stateable.profile_complete?
+            transition_to(Published)
+          else
+            transition_to(Pending)
+          end
 
-  class Rejected < StateBase
-    def publish!
-      transition_to(Published) if stateable.valid?
-      stateable.save!
+          stateable.save!
+        end
+      end
+
+      def verify!
+        transition_to(Pending)
+        stateable.save!
+      end
     end
 
-    def enter
-      Notifier.notify_blog_owner(stateable)
+    class Rejected < StateBase
+      def publish!
+        transition_to(Published) if stateable.valid?
+        stateable.save!
+      end
+
+      def enter
+        Notifier.notify_blog_owner(stateable)
+      end
     end
   end
 
   class Blog < ActiveRecord::Base
+    include BlogStates
     include ActiveRecordStatePattern
     set_initial_state Unverified
     valid_transitions [Unverified, :submit!] => [Published, Pending, Unverified], [Unverified, :verify!] => Pending, [Unverified, :reject!] => Rejected,
