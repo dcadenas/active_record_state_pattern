@@ -15,7 +15,12 @@ end
 $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 $LOAD_PATH.unshift(File.dirname(__FILE__))
 
-RAILS_ROOT = File.dirname(__FILE__)
+class Rails
+  def self.root
+    File.dirname(__FILE__)
+  end
+end
+
 ActiveRecord::Base.establish_connection :adapter => :nulldb, :schema => 'schema.rb'
 
 require 'init'
